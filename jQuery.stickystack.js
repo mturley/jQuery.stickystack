@@ -9,4 +9,32 @@
 //    jQuery.ScrollTo [http://flesler.blogspot.com/2007/10/jqueryscrollto.html]
 //    jQuery Waypoints [http://imakewebthings.com/jquery-waypoints/]
 
-jQuery.fn.stickystack
+(function( $ ) {
+
+  function log() {
+    if(console.log) console.log.apply(console, arguments);
+  }
+
+  function warn() {
+    if(console.warn) console.warn.apply(console, arguments);
+  }
+
+  jQuery.fn.stickystack = function() {
+
+
+
+
+
+    console.warn("Warning: there's no plugin here.");
+
+
+
+    // TODO: write the plugin
+
+
+
+
+
+
+  };
+})( jQuery );
