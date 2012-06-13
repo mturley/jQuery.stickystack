@@ -1,7 +1,7 @@
 jQuery.stickystack
 ==================
 
-stickystack is an adaptive sticky element positioning plugin by Mike Turley.
+a jQuery plugin for adaptive sticky element positioning written by [Mike Turley](http://www.miketurley.com).
 
 a demo can be found at demo.html.
 documentation can be found at docs/jQuery.stickystack.html.
