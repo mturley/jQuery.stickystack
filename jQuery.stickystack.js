@@ -1,55 +1,105 @@
-// WORK IN PROGRESS, PLEASE DO NOT USE.
+// a jQuery plugin for adaptive sticky element positioning written by [Mike Turley](http://www.miketurley.com).
+// ------------------------------------------------------------------------------------------------------------
 
-// jQuery.stickystack
-// make the active element in a selection stick to the edge of the screen.
-// conditionally sets and unsets fixed position on elements as you scroll.
+// jQuery.stickystack makes the active element in a selection stick to the edge of the screen.
+// it works by conditionally setting and unsetting fixed and absolute position on elements as you scroll.
+//
+// a demo can be found [here](../demo.html).
+//
+// this annotated source code was generated with the wonderful [docco](http://jashkenas.github.com/docco/).
 
-// annotated source is documented with docco: http://jashkenas.github.com/docco/
 
-(function( $, window, document, console, undefined ) {
+// license
+// -------
+// jQuery.stickystack is dual-licensed under the
+// [MIT](../MIT-LICENSE.txt) and
+// [GPL](../GPL-LICENSE.txt) licenses, as is jQuery itself.
+// you may use jQuery.stickystack anywhere you are permitted to use jQuery, including in a commercial project
+// as long as this license statement is left intact.
+
+
+// usage
+// -----
+//     $(document).ready(function() {
+//       $(".some-class").stickystack();         // create
+//       // optionally, later on:
+//       $(".some-class").stickystackUnstick();  // destroy
+//     });
+
+
+// the only global variable (not truly global, since it's in a closure) is `stacks`,
+// an array of objects to track the stacks you've created.
+(function( $ ) {
 
   var stacks = [];
-  var nothing = $([]);
 
-  // $.fn.stickystack: treats the selection as a vertical stack of elements, and makes them sticky relative to the mode.
-  // the container is defined as the nearest common ancestor which has a scrollbar.
-  // the mode can be 'top' or 'always', and defaults to 'top' if no mode is specified.
-  // in 'top' mode, element(s) will:
-  //    be fixed at the top of the container when the user scrolls past them (one fixed element at a time).
-  //    be allowed to go out of view above the container only when the next element in the stack is scrolled to.
-  //    be allowed to go out of view below the container as normal.
-  // in 'always' mode, element(s) will:
-  //    be fixed at the top of the container if they normally would be out of view above the container.
-  //    be fixed at the bottom of the container if they normally would be out of view below the container.
-  //    not be allowed to go out of view at all.
-  // this plugin only affects elements which would be out of view without the plugin.
-  // elements whose static position is within the viewable area are left at that static position.
-  // all positions and states are updated dynamically on the container's scroll event.
+  // $.fn.* (jQuery selector functions)
+  // ----------------------------------
+  // this plugin provides the following top-level jQuery functions:
+  //
+  // * **`$.fn.stickystack`** initializes a stickystack.
+  // * **`$.fn.stickystackResetStyle`** restores element's original styles.
+  // * **`$.fn.stickystackUpdate`** updates element positions on scroll.
+  // * **`$.fn.stickystackUnstick`** undoes the effects of the plugin.
+  // * **`$.fn.stickystackFindContainer`** looks for scrollbars.
+  // * **`$.fn.stickystackCommonAncestor`** finds a common ancestor.
+  // * **`$.fn.stickystackScrollable`** is a helper for the `scroll` event.
+
+  // $.fn.stickystack
+  // ----------------
+  // this is the main plugin function, used to set up a stickystack.
   $.fn.stickystack = function(mode) {
+
     var container, stack;
 
-    if(mode === undefined) mode = 'top'; // the mode defaults to 'top'.
+    // this function treats the selection as a vertical stack of elements, and makes them sticky relative to the mode.
+    // the "container" is defined as the nearest common ancestor which has a scrollbar. (see $.fn.stickystackFindContainer)
+
+    // the mode can be 'top' or 'always', and defaults to 'top' if no mode is specified.
+
+    if(mode === undefined) mode = 'top';
 
     if(mode != 'top' && mode != 'always') {
       warn("jQuery.stickystack: invalid mode: ",mode);
       return null;
     }
 
+    // * in 'top' mode, elements will:
+    //   * be fixed at the top of the container when the user scrolls past them (one fixed element at a time).
+    //   * be allowed to go out of view above the container only when the next element in the stack is scrolled to.
+    //   * be allowed to go out of view below the container as normal.
+    // * in 'always' mode, elements will:
+    //   * be fixed at the top of the container if they normally would be out of view above the container.
+
+    // this plugin only affects elements which would be out of view without the plugin.
+    // elements whose static position is within the viewable area are left at that static position.
+    // all positions and states are updated dynamically on the container's scroll event.
+
+    // if called on elements which are already "sticky", the plugin will refuse to repeat itself.
     if(this.hasClass('stickystack-item')) {
       warn("jQuery.stickystack: that stack is already sticky!");
       return null;
     }
 
     container = this.stickystackFindContainer();
-    stack = {                  // each stack object knows:
-      'mode'      : mode,      //    what mode it was applied with
-      'elements'  : this,      //    what elements it was applied to
-      'container' : container  //    what container to listen to
+    // each stack object keeps track of:
+
+    // * what mode it was applied with
+    // * what elements it was applied to
+    // * what container to listen to
+    stack = {
+      'mode'      : mode,
+      'elements'  : this,
+      'container' : container
     };
     stacks.push(stack);
 
+    // this loop initializes each item in the stack.
     this.addClass('stickystack-item').addClass('stickystack-mode-'+mode).each(function(index) {
       var t = $(this);
+      // a placeholder matching the width of each element is inserted before it, and given the element's full height
+      // as a data key.  this way, we can apply and un-apply height to the placeholder, so that when elements are
+      // positioned with float or absolute, the space they left behind in the document does not collapse.
       var placeholder = $("<div />").addClass('stickystack-placeholder').css({
         'width'  : t.outerWidth(),
         'height' : '0'
@@ -58,8 +108,9 @@
         'fullHeight'     : t.outerHeight(),
         'placeholderFor' : t
       });
+
+      // each element in the stack stores its original position so it can be reapplied later.
       t.data({
-        // each element in the stack stores its original position so it can be reapplied later.
         'stickystackOriginalStyle' : {
           'position' : t.css('position'),
           'top'      : t.css('top'),
@@ -71,16 +122,17 @@
         // each element in the stack also stores references to the stack's container...
         'stickystackContainer'   : container,
         // ...previous and next items...
-        'stickystackPrevItem'    : (index != 0 ? $(stack.elements[index-1]) : nothing),
-        'stickystackNextItem'    : (index != stack.elements.length-1 ? $(stack.elements[index+1]) : nothing),
+        'stickystackPrevItem'    : (index != 0 ? $(stack.elements[index-1]) : $([])),
+        'stickystackNextItem'    : (index != stack.elements.length-1 ? $(stack.elements[index+1]) : $([])),
         // ...the placeholder and the mode.
         'stickystackPlaceholder' : placeholder,
         'stickystackMode'        : mode
       });
     });
 
+    // if the container is not already initialized, set up the scroll listener
+    // using [jQuery.on()](http://api.jquery.com/on/) with a .stickystack namespace.
     if(!container.data('stickystackInitialized')) {
-      var bindTarget = container;
       container.stickystackScrollable().on('scroll.stickystack', function() {
         container.stickystackUpdate();
       });
@@ -92,9 +144,15 @@
     }
   };
 
+
+
+  // $.fn.stickystackResetStyle
+  // --------------------------
+  // restores element's original styles and flattens the placeholder element back to height 0.
+  // this is called on elements that should no longer be fixed or absolute.
   $.fn.stickystackResetStyle = function() {
     if(this.length != 0) {
-      var orig = $(this).data('stickystackOriginalStyle'); // reapplies the stored original position for each element.
+      var orig = $(this).data('stickystackOriginalStyle');
       for(var prop in orig) { $(this).css(prop, orig[prop]); }
       var placeholder = $(this).data('stickystackPlaceholder');
       placeholder.css('height', '0');
@@ -102,25 +160,43 @@
     }
   };
 
-  // $.fn.stickystackUpdate: to be called with the selection as an initialized container.  updates item positions.
+
+
+  // $.fn.stickystackUpdate
+  // ----------------------
+  // called on scroll, this function updates the positions of items in the stack.
+  // it is to be called with the selection as an initialized container.
+  // this is where most of the magic happens!
   $.fn.stickystackUpdate = function() {
     var container = this;
     if(this.is($(window))) container = $('body');
     if(!container.data('stickystackInitialized')) {
       warn("jQuery.stickystack: that's not an initialized stickystack container:", container);
+      if(this.first().data('stickystackContainer')) {
+        log("jQuery.stickystack: updated anyway based on the associated container.");
+        this.first().data('stickystackContainer').stickystackUpdate();
+      }
       return null;
     }
     var topBuffer = 0;
+    // the function loops through each of the elements in the stack:
     container.find('.stickystack-item').each(function() {
+      // for each element, fetch the mode, placeholder, width, scrollTop and previous element.
       var t = $(this);
       var mode = t.data('stickystackMode');
       var placeholder = t.data('stickystackPlaceholder');
       var width = t.width();
       var scrollTop = t.data('stickystackContainer').get(0).scrollTop;
-      var topAboveScroll = placeholder.offset().top <= scrollTop + topBuffer;
       var prev = t.data('stickystackPrevItem');
+      // detect whether this element's placeholder is out of view above the window.
+      var outOfViewAbove = placeholder.offset().top <= scrollTop + topBuffer;
+      // detect whether this element is currently colliding with the previous element.
+      // this will only occur when the previous element is fixed, and this element has been scrolled into it.
       var colliding = false;
       if(prev.length != 0) colliding = placeholder.offset().top <= prev.offset().top + prev.outerHeight();
+      // if a collision is detected, set the previous element's position absolutely to just above this element.
+      // this is what gives the effect of sticky elements "bumping" each other out of the way.
+      // in a collision, we also assert that the previous element's placeholder is taking up its full height.
       if(colliding) {
         prev.removeClass('stickystack-fixed').addClass('stickystack-absolute').css({
           'position'   : 'absolute',
@@ -130,11 +206,11 @@
           'visibility' : 'visible'
         });
         var prevplaceholder = prev.data('stickystackPlaceholder');
-        prevplaceholder.css({
-          'height' : prevplaceholder.data('fullHeight')+'px'
-        });
+        prevplaceholder.css('height', prevplaceholder.data('fullHeight')+'px');
       }
-      if(!topAboveScroll) {
+      // if this element's placeholder is in view, ensure we are not messing with its styles.
+      // otherwise, set it as the fixed element.
+      if(!outOfViewAbove) {
         t.stickystackResetStyle();
       } else {
         t.removeClass('stickystack-absolute').addClass('stickystack-fixed').css({
@@ -147,15 +223,24 @@
         placeholder.css({
           'height' : placeholder.data('fullHeight')+'px'
         });
+        // if this element's sticky mode is 'always', we add its height to the topBuffer.
+        // this forces other sticky elements to be fixed just below it since it will always be in view.
         if(mode == 'always') topBuffer += $(this).outerHeight();
       }
     });
+    // if there is a 'top'-mode element which is currently fixed, hide all absolutely-positioned items.
+    // this means that once an item is moved above its fixed position, it disappears rather than hanging out
+    // behind whatever other elements may be there.
     if(container.find('.stickystack-fixed.stickystack-mode-top').length != 0) {
       container.find('.stickystack-absolute').css('visibility','hidden');
     }
   };
 
-  // $.fn.stickystackUnstick: reverses the effects of the plugin for the selected elements.
+
+
+  // $.fn.stickystackUnstick
+  // -----------------------
+  // this function reverses all effects of the plugin for the selected elements.
   $.fn.stickystackUnstick = function() {
     var classes = 'stickystack-item stickystack-mode-top stickystack-mode-always stickystack-fixed stickystack-absolute';
     var container = this.first().data('stickystackContainer');
@@ -173,12 +258,11 @@
     }
   };
 
-  $.fn.stickystackScrollable = function() {
-    if(this.is("body")) return $(window);
-    return this;
-  };
 
-  // $.fn.stickystackFindContainer: search this element's ancestors for the nearest element with a scrollbar.
+
+  // $.fn.stickystackFindContainer
+  // -----------------------------
+  // this function searches the element's ancestors for the nearest element with a scrollbar.
   $.fn.stickystackFindContainer = function() {
     var t = this.stickystackCommonAncestor();
     while(!t.is('body')) {
@@ -189,8 +273,12 @@
     return t;
   };
 
-  // $.fn.stickystackCommonAncestor: find the closest element which is a parent of all selected elements.
-  // this function is borrowed from http://stackoverflow.com/a/3217279 (very slightly changed)
+
+
+  // $.fn.stickystackCommonAncestor
+  // ------------------------------
+  // this function finds the closest element which is a parent of all selected elements.
+  // **disclaimer: this function is borrowed without explicit permission from <http://stackoverflow.com/a/3217279>**
   $.fn.stickystackCommonAncestor = function() {
     if(this.length == 0) return this;
     var parents = [];
@@ -203,7 +291,6 @@
     for (var i in parents) {
       parents[i] = parents[i].slice(parents[i].length - minlen);
     }
-    // Iterate until equality is found
     for (var i = 0; i < parents[0].length; i++) {
       var equal = true;
       for (var j in parents) {
@@ -214,12 +301,28 @@
       }
       if (equal) return $(parents[0][i]);
     }
-    return nothing;
+    return $([]);
   };
+
+
+
+  // $.fn.stickystackScrollable
+  // --------------------------
+  // this 2-line function simply makes sure the selected element is one that can trigger a 'scroll' event.
+  // it only exists to handle the special case in which the container is the body tag, in which case
+  // the 'scroll' event is really coming from the window.
+  // In other cases, the scrollable and the container are the same element.
+  $.fn.stickystackScrollable = function() {
+    if(this.is("body")) return $(window);
+    return this;
+  };
+
+
 
   // nerf the console functions so they work if present, but don't break things if absent.
   function log() { if(console.log) console.log.apply(console, arguments); }
   function warn() { if(console.warn) console.warn.apply(console, arguments); }
-  function error() { if(console.error) console.error.apply(console, arguments); }
 
-})( jQuery, window, document, console );
+})( jQuery );
+
+// that's it!  you read all the way to the bottom!  aren't you having an exciting day.

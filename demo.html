@@ -2,6 +2,8 @@
 <html>
   <head>
     <title>jQuery.stickystack Demo</title>
+    <link href='http://fonts.googleapis.com/css?family=Droid+Sans' rel='stylesheet' type='text/css'>
+    <link href="demo.css" rel="stylesheet" type="text/css">
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
     <script type="text/javascript" src="jQuery.stickystack.js"></script>
     <script type="text/javascript">
@@ -10,29 +12,17 @@
         $(".subheading").stickystack();  // same as calling .stickystack('top')
       });
     </script>
-    <style type="text/css">
-      body {
-        width: 800px;
-        text-align: center;
-        margin: auto;
-      }
-      h1.mainheading, h2.subheading {
-        border: 2px solid blue;
-        margin: 5px;
-        padding: 20px;
-        background-color: #e2e2e2;
-      }
-      h2.subheading {
-        font-size: 24px;
-        border: 2px solid green;
-      }
-      h2.subheading.span {
-        font-size: 32px;
-      }
-    </style>
   </head>
   <body>
-    <h1>This is some header content.  It is not sticky.</h1>
+    <h2>This is a demo of <a href="http://www.miketurley.com/">Mike Turley</a>'s jQuery.stickystack plugin.</h2>
+    <h3>
+      stickystack is an adaptive sticky element positioning plugin.<br />
+      Scroll down to see it in action!
+    </h3>
+    <h3>
+      The source can be found <a href="https://github.com/mturley/jQuery.stickystack">on github</a>.<br />
+      Documentation can be found <a href="docs/jQuery.stickystack.html">here</a>.
+    </h3>
     <br />
     <h1 class="mainheading">Main Heading: sticky mode 'always'</h1>
     <div class="section">
