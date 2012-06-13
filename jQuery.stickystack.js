@@ -6,6 +6,8 @@
 //
 // a demo can be found [here](../demo.html).
 //
+// the source code can be found [on GitHub](https://github.com/mturley/jQuery.stickystack).
+//
 // this annotated source code was generated with the wonderful [docco](http://jashkenas.github.com/docco/).
 
 
