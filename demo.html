@@ -3,12 +3,11 @@
   <head>
     <title>jQuery.stickystack Demo</title>
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
-    <script type="text/javascript" src="https://raw.github.com/imakewebthings/jquery-waypoints/master/waypoints.min.js"></script>
     <script type="text/javascript" src="jQuery.stickystack.js"></script>
     <script type="text/javascript">
       $(document).ready(function() {
         $(".mainheading").stickystack('always');
-        $(".subheading").stickystack();
+        $(".subheading").stickystack();  // same as calling .stickystack('top')
       });
     </script>
     <style type="text/css">

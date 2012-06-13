@@ -4,19 +4,12 @@
 // make the active element in a selection stick to the edge of the screen.
 // conditionally sets and unsets fixed position on elements as you scroll.
 
-// packaged as a jQuery plugin
-// depends on another jQuery plugin, jQuery Waypoints: http://imakewebthings.com/jquery-waypoints/
-
 // annotated source is documented with docco: http://jashkenas.github.com/docco/
 
 (function( $, window, document, console, undefined ) {
 
   var stacks = [];
   var nothing = $([]);
-
-  $(document).ready(function() {
-    $.waypoints.settings.scrollThrottle = 30;
-  });
 
   // $.fn.stickystack: treats the selection as a vertical stack of elements, and makes them sticky relative to the mode.
   // the container is defined as the nearest common ancestor which has a scrollbar.
@@ -75,18 +68,6 @@
         'placeholderFor' : t
       });
       $(this).data('stickystackPlaceholder', placeholder);
-
-      placeholder.waypoint(function(event, direction) {
-        // scrolled past the top of the element's original location
-        log("STICKYSTACK WAYPOINT: scrolled ", direction, " past this sticky element's top line: ", t);
-        event.stopPropagation();
-      });/*.waypoint(function(event, direction) {
-        // scrolled past the bottom of the element's original location
-        log("STICKYSTACK WAYPOINT: scrolled ", direction, " past this sticky element's bottom line: ", t);
-        event.stopPropagation();
-      }, {
-        offset: 0 - t.outerHeight()
-      });*/
     });
 
     if(!container.data('stickystackInitialized')) {
