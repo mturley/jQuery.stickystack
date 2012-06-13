@@ -4,16 +4,23 @@ body {
   margin: auto;
   font-family: 'Droid Sans', sans-serif;
 }
-h1.mainheading, h2.subheading {
+a {
+  color: blue;
+}
+.mainheading, .subheading {
   border: 2px solid blue;
   margin: 5px;
   padding: 20px;
   background-color: #e2e2e2;
 }
-h2.subheading {
+.mainheading h1 {
+  padding: 0;
+  margin: 0;
+}
+.subheading {
   font-size: 24px;
   border: 2px solid green;
 }
-h2.subheading.span {
+.subheading.span {
   font-size: 32px;
 }
