@@ -61,7 +61,7 @@
 
     if(mode === undefined) mode = 'top';
 
-    if(mode != 'top' && mode != 'always') {
+    if(mode !== 'top' && mode !== 'always') {
       warn("jQuery.stickystack: invalid mode: ",mode);
       return null;
     }
@@ -124,8 +124,8 @@
         // each element in the stack also stores references to the stack's container...
         'stickystackContainer'   : container,
         // ...previous and next items...
-        'stickystackPrevItem'    : (index != 0 ? $(stack.elements[index-1]) : $([])),
-        'stickystackNextItem'    : (index != stack.elements.length-1 ? $(stack.elements[index+1]) : $([])),
+        'stickystackPrevItem'    : (index !== 0 ? $(stack.elements[index-1]) : $([])),
+        'stickystackNextItem'    : (index !== stack.elements.length-1 ? $(stack.elements[index+1]) : $([])),
         // ...the placeholder and the mode.
         'stickystackPlaceholder' : placeholder,
         'stickystackMode'        : mode
@@ -153,7 +153,7 @@
   // restores element's original styles and flattens the placeholder element back to height 0.
   // this is called on elements that should no longer be fixed or absolute.
   $.fn.stickystackResetStyle = function() {
-    if(this.length != 0) {
+    if(this.length !== 0) {
       var orig = $(this).data('stickystackOriginalStyle');
       for(var prop in orig) { $(this).css(prop, orig[prop]); }
       var placeholder = $(this).data('stickystackPlaceholder');
@@ -195,7 +195,7 @@
       // detect whether this element is currently colliding with the previous element.
       // this will only occur when the previous element is fixed, and this element has been scrolled into it.
       var colliding = false;
-      if(prev.length != 0) colliding = placeholder.offset().top <= prev.offset().top + prev.outerHeight();
+      if(prev.length !== 0) colliding = placeholder.offset().top <= prev.offset().top + prev.outerHeight();
       // if a collision is detected, set the previous element's position absolutely to just above this element.
       // this is what gives the effect of sticky elements "bumping" each other out of the way.
       // in a collision, we also assert that the previous element's placeholder is taking up its full height.
@@ -227,13 +227,13 @@
         });
         // if this element's sticky mode is 'always', we add its height to the topBuffer.
         // this forces other sticky elements to be fixed just below it since it will always be in view.
-        if(mode == 'always') topBuffer += $(this).outerHeight();
+        if(mode === 'always') topBuffer += $(this).outerHeight();
       }
     });
     // if there is a 'top'-mode element which is currently fixed, hide all absolutely-positioned items.
     // this means that once an item is moved above its fixed position, it disappears rather than hanging out
     // behind whatever other elements may be there.
-    if(container.find('.stickystack-fixed.stickystack-mode-top').length != 0) {
+    if(container.find('.stickystack-fixed.stickystack-mode-top').length !== 0) {
       container.find('.stickystack-absolute').css('visibility','hidden');
     }
   };
@@ -269,7 +269,7 @@
     var t = this.stickystackCommonAncestor();
     while(!t.is('body')) {
       var o = t.css('overflow');
-      if(o == 'auto' || o == 'scroll' && t.get(0).scrollHeight > t.height()) { return t; }
+      if(o === 'auto' || o === 'scroll' && t.get(0).scrollHeight > t.height()) { return t; }
       t = t.parent();
     }
     return t;
@@ -282,7 +282,7 @@
   // this function finds the closest element which is a parent of all selected elements.
   // **disclaimer: this function is borrowed without explicit permission from <http://stackoverflow.com/a/3217279>**
   $.fn.stickystackCommonAncestor = function() {
-    if(this.length == 0) return this;
+    if(this.length === 0) return this;
     var parents = [];
     var minlen = Infinity;
     this.each(function() {
@@ -296,7 +296,7 @@
     for (var i = 0; i < parents[0].length; i++) {
       var equal = true;
       for (var j in parents) {
-        if (parents[j][i] != parents[0][i]) {
+        if (parents[j][i] !== parents[0][i]) {
           equal = false;
           break;
         }
