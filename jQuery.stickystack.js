@@ -114,12 +114,12 @@
       // each element in the stack stores its original position so it can be reapplied later.
       t.data({
         'stickystackOriginalStyle' : {
-          'position' : t.css('position'),
-          'top'      : t.css('top'),
-          'left'     : t.css('left'),
-          'width'    : t.css('width'),
-          'z-index'  : t.css('z-index'),
-          'opacity'  : t.css('opacity')
+          'position'   : t.css('position'),
+          'top'        : t.css('top'),
+          'left'       : t.css('left'),
+          'width'      : t.css('width'),
+          'z-index'    : t.css('z-index'),
+          'visibility' : t.css('visibility')
         },
         // each element in the stack also stores references to the stack's container...
         'stickystackContainer'   : container,
@@ -171,7 +171,7 @@
   // this is where most of the magic happens!
   $.fn.stickystackUpdate = function() {
     var container = this;
-    if(this.is($(window))) container = $('body');
+    if(this.is('body')) container = $(document);
     if(!container.data('stickystackInitialized')) {
       warn("jQuery.stickystack: that's not an initialized stickystack container:", container);
       if(this.first().data('stickystackContainer')) {
@@ -181,6 +181,8 @@
       return null;
     }
     var topBuffer = 0;
+    // first we calculate the offset left-position of the first element placeholder in the stack, which we'll use later.
+    var leftPos = container.data('stickystackObj').elements.first().data('stickystackPlaceholder').offset().left;
     // the function loops through each of the elements in the stack:
     container.find('.stickystack-item').each(function() {
       // for each element, fetch the mode, placeholder, width, scrollTop and previous element.
@@ -188,7 +190,7 @@
       var mode = t.data('stickystackMode');
       var placeholder = t.data('stickystackPlaceholder');
       var width = t.width();
-      var scrollTop = t.data('stickystackContainer').get(0).scrollTop;
+      var scrollTop = t.data('stickystackContainer').scrollTop();
       var prev = t.data('stickystackPrevItem');
       // detect whether this element's placeholder is out of view above the window.
       var outOfViewAbove = placeholder.offset().top <= scrollTop + topBuffer;
@@ -203,7 +205,8 @@
         prev.removeClass('stickystack-fixed').addClass('stickystack-absolute').css({
           'position'   : 'absolute',
           'top'        : (t.offset().top - prev.outerHeight())+'px',
-          'left'       : container.offset().left,
+          'left'       : leftPos+'px',
+          'width'      : width+'px',
           'z-index'    : 0,
           'visibility' : 'visible'
         });
@@ -218,6 +221,7 @@
         t.removeClass('stickystack-absolute').addClass('stickystack-fixed').css({
           'position'   : 'fixed',
           'top'        : topBuffer+'px',
+          'left'       : leftPos+'px',
           'width'      : width+'px',
           'z-index'    : 100,
           'visibility' : 'visible'
@@ -272,7 +276,7 @@
       if(o == 'auto' || o == 'scroll' && t.get(0).scrollHeight > t.height()) { return t; }
       t = t.parent();
     }
-    return t;
+    return $(document);
   };
 
 
@@ -315,9 +319,23 @@
   // the 'scroll' event is really coming from the window.
   // In other cases, the scrollable and the container are the same element.
   $.fn.stickystackScrollable = function() {
-    if(this.is("body")) return $(window);
+    if(this.is("body")) return $(document);
     return this;
   };
+
+
+
+  // $(document).ready event
+  // -----------------------
+  // when the document is ready, we bind to the window's resize event.  on that event, we loop through all our
+  // stacks and update item positions in each.  this fixes a bug where positions get messed up on window resize.
+  $(document).ready(function() {
+    $(window).resize(function() {
+      $.each(stacks, function(idx, stack) {
+        stack.container.stickystackUpdate();
+      });
+    })
+  });
 
 
 
