@@ -210,6 +210,7 @@
           'z-index'    : 0,
           'visibility' : 'visible'
         });
+        if(prev.offset().left != leftPos) prev.css('left','0px');
         var prevplaceholder = prev.data('stickystackPlaceholder');
         prevplaceholder.css('height', prevplaceholder.data('fullHeight')+'px');
       }
